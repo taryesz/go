@@ -5,3 +5,5 @@ The project is called "Go" - ancient Chinese table game. How-to-play manual is b
 to read about it on Wikipedia or somewhere on YT.
 
 Again, this is my FIRST ever project, and I know it's not the best code-wise, but I decided to upload it to show the progress I made for these months I've been studying :D
+
+PS sorry for the Polish comments - I didn't know it was a bad idea back then haha
