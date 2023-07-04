@@ -1,273 +1,222 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 #include<stdio.h>
 #include"conio2.h"
 #include<string.h>
 #include<stdlib.h>
+#include <string>
+using namespace std;
 
+#define MENU_X 6
+#define MENU_Y 6
 
-#define LEGENDA_X 6
-#define LEGENDA_Y 6
+#define MAP_X 80
+#define MAP_Y 5
 
-#define PLANSZA_X 80
-#define PLANSZA_Y 5
+#define WINDOW_BORDER_X 120
+#define WINDOW_BORDER_Y 30
 
-#define GRANICA_OKNA 120
-#define GRANICA_OKNA_Y 30
+void put_i_checker(int& player, int& wsp, int& wspY, char** map, int& size) {
+    if (player % 2 == 0) {
 
-static int rozmiar = 0;
+        if (wsp == 0 && wspY == 1 && map[wsp + 1][wspY - 1] == '*' && map[wsp][wspY] == '*') {
+            // nic
+        }
+        else if (wsp == (size - 1) && wspY == 1 && map[wsp - 1][wspY - 1] == '*' && map[wsp][wspY] == '*') {
+            // nic
+        }
+        else if (wsp == 0 && wspY == size && map[wsp + 1][wspY - 1] == '*' && map[wsp][wspY - 2] == '*') {
+            // nic
+        }
+        else if (wsp == (size - 1) && wspY == size && map[wsp - 1][wspY - 1] == '*' && map[wsp][wspY - 2] == '*') {
+            // nic
+        }
+        else if (map[wsp][wspY - 1] != 'o') {
+            map[wsp][wspY - 1] = '*';
+        }
 
-static int granicaL = 0;
-static int granicaG = 0;
-static int granicaD = 0;
-static int granicaP = 0;
-
-static char pl[120][120];
-static int gracz = 1;
-static int wynikBialego = 0;
-static int wynikCzarnego = 0;
-static char wynB[10000];
-static char wynC[10000];
-
-static int konwertacjaY[100];
-static int konwertacjaX[100];
-
-static char str[100] = "";
-
-// ----------------------------------------------
-
-void planszaIni(int x, int y, int attr, bool putI = false) {
-
-    for (int i = PLANSZA_Y, j = 0; i <= (PLANSZA_Y + rozmiar); i++, j++) {
-        konwertacjaY[i] = j;
     }
-    int wspY = konwertacjaY[y];
+    else if (player % 2 != 0) {
 
-    for (int i = PLANSZA_X, j = 0; i <= (rozmiar * 2) - 2 + PLANSZA_X; i = i + 2, j++) {
-        konwertacjaX[i] = j;
+        if (wsp == 0 && wspY == 1 && map[wsp + 1][wspY - 1] == 'o' && map[wsp][wspY] == 'o') {
+            // nic
+        }
+        else if (wsp == (size - 1) && wspY == 1 && map[wsp - 1][wspY - 1] == 'o' && map[wsp][wspY] == 'o') {
+            // nic
+        }
+        else if (wsp == 0 && wspY == size && map[wsp + 1][wspY - 1] == 'o' && map[wsp][wspY - 2] == 'o') {
+            // nic
+        }
+        else if (wsp == (size - 1) && wspY == size && map[wsp - 1][wspY - 1] == 'o' && map[wsp][wspY - 2] == 'o') {
+            // nic
+        }
+        else if (map[wsp][wspY - 1] != '*') {
+            map[wsp][wspY - 1] = 'o';
+        }
+
     }
-    int wsp = konwertacjaX[x];
+}
+
+void kill_white(char** map, int& size, int& i, int& k, int& j, int& black_players_count, string message_white_player) {
+    map[i][k] = '+';
+    textcolor(1);
+    putch(map[i][k]);
+    if (i != size - 1) {
+        putch(' ');
+    }
+    black_players_count += 1;
+    gotoxy(MENU_X, MENU_Y + 12);
+    char buffer[1000];
+    strcpy(buffer, message_white_player.c_str());
+    sprintf(buffer, "The Black Player killed the White player %d times", black_players_count);
+    cputs(buffer);
+    gotoxy(MAP_X, j + 4);
+}
+
+void white_move(int& i, int& j, int& k, char** map, int& size, int& black_players_count, string message_white_player) {
+    // sprawdzenie czy gracz Bialy znajduje sie w rogu planszy i jest otoczony prze gracza Czarnego
+
+    // lewy gorny rog..
+    if (i == 0 && k == 0 && map[i + 1][k] == '*' && map[i][k + 1] == '*') {
+        kill_white(map, size, i, k, j, black_players_count, message_white_player);
+    }
+    // prawy gorny rog..
+    if (i == (size - 1) && k == 0 && map[i - 1][k] == '*' && map[i][k + 1] == '*') {
+        kill_white(map, size, i, k, j, black_players_count, message_white_player);
+    }
+    // lewy dolny rog..
+    if (i == 0 && k == (size - 1) && map[i + 1][k] == '*' && map[i][k - 1] == '*') {
+        kill_white(map, size, i, k, j, black_players_count, message_white_player);
+    }
+    // prawy dolny rog..
+    if (i == (size - 1) && k == (size - 1) && map[i - 1][k] == '*' && map[i][k - 1] == '*') {
+        kill_white(map, size, i, k, j, black_players_count, message_white_player);
+    }
+
+    // sprawdzenie czy gracz Bialy jest w otoczeniu gracza Czarnego ze wszystkich stron
+
+    if (map[i][k - 1] == '*' && map[i][k + 1] == '*' && map[i - 1][k] == '*' && map[i + 1][k] == '*') {
+        map[i][k] = '.';
+        textcolor(1);
+        putch(map[i][k]);
+        if (i != size - 1) {
+            putch(' ');
+        }
+        black_players_count += 1;
+        gotoxy(MENU_X, MENU_Y + 12);
+        char buffer[1000];
+        strcpy(buffer, message_white_player.c_str());
+        sprintf(buffer, "The Black Player killed the White player %d times", black_players_count);
+        cputs(buffer);
+        gotoxy(MAP_X, j);
+    }
+    else {
+        textcolor(15);
+        putch(map[i][k]);
+        if (i != size - 1) {
+            putch(' ');
+        }
+        textcolor(1);
+    }
+}
+
+void kill_black(char** map, int& size, int& i, int& k, int& j, int& white_players_count, string message_black_player) {
+    map[i][k] = '+';
+    textcolor(1);
+    putch(map[i][k]);
+    if (i != size - 1) {
+        putch(' ');
+    }
+    white_players_count += 1;
+    gotoxy(MENU_X, MENU_Y + 13);
+    char buffer[1000];
+    strcpy(buffer, message_black_player.c_str());
+    sprintf(buffer, "The White Player killed the Black player %d times", white_players_count);
+    cputs(buffer);
+    gotoxy(MAP_X, j + 4);
+}
+
+void black_move(int& i, int& j, int& k, char** map, int& size, int& white_players_count, string message_black_player) {
+
+    // sprawdzenie czy gracz Bialy znajduje sie w rogu planszy i jest otoczony prze gracza Czarnego
+
+    // lewy gorny rog..
+    if (i == 0 && k == 0 && map[i + 1][k] == 'o' && map[i][k + 1] == 'o') {
+        kill_black(map, size, i, k, j, white_players_count, message_black_player);
+    }
+    // prawy gorny rog..
+    if (i == (size - 1) && k == 0 && map[i - 1][k] == 'o' && map[i][k + 1] == 'o') {
+        kill_black(map, size, i, k, j, white_players_count, message_black_player);
+    }
+    // lewy dolny rog..
+    if (i == 0 && k == (size - 1) && map[i + 1][k] == 'o' && map[i][k - 1] == 'o') {
+        kill_black(map, size, i, k, j, white_players_count, message_black_player);
+    }
+    // prawy dolny rog..
+    if (i == (size - 1) && k == (size - 1) && map[i - 1][k] == 'o' && map[i][k - 1] == 'o') {
+        kill_black(map, size, i, k, j, white_players_count, message_black_player);
+    }
+
+    // sprawdzenie czy gracz Czarny jest w otoczeniu gracza Bialego ze wszystkich stron
+
+    if (map[i][k - 1] == 'o' && map[i][k + 1] == 'o' && map[i - 1][k] == 'o' && map[i + 1][k] == 'o') {
+        map[i][k] = '.';
+        textcolor(1);
+        putch(map[i][k]);
+        if (i != size - 1) {
+            putch(' ');
+        }
+        white_players_count += 1;
+        gotoxy(MENU_X, MENU_Y + 13);
+        char buffer[1000];
+        strcpy(buffer, message_black_player.c_str());
+        sprintf(buffer, "The White Player killed the Black player %d times", white_players_count);
+        cputs(buffer);
+        gotoxy(MAP_X, j);
+
+    }
+    else {
+        textcolor(0);
+        putch(map[i][k]);
+        if (i != size - 1) {
+            putch(' ');
+        }
+        textcolor(1);
+    }
+}
+
+void initialize_board(int x, int y, int attr, int& player, char** map, int& size, int& black_players_count, int& white_players_count, int* convert_x, int* convert_y, string message_white_player, string message_black_player, bool putI = false) {
+
+    for (int i = MAP_Y, j = 0; i <= (MAP_Y + size); i++, j++) {
+        convert_y[i] = j;
+    }
+    int wspY = convert_y[y];
+
+    for (int i = MAP_X, j = 0; i <= (size * 2) - 2 + MAP_X; i = i + 2, j++) {
+        convert_x[i] = j;
+    }
+    int wsp = convert_x[x];
 
     if (putI == true) {
-        if (gracz % 2 == 0) {
-            if (wsp == 0 && wspY == 1 && pl[wsp + 1][wspY - 1] == '*' && pl[wsp][wspY] == '*') {
-                // nic
-            }
-            else if (wsp == (rozmiar - 1) && wspY == 1 && pl[wsp - 1][wspY - 1] == '*' && pl[wsp][wspY] == '*') {
-                // nic
-            }
-            else if (wsp == 0 && wspY == rozmiar && pl[wsp + 1][wspY - 1] == '*' && pl[wsp][wspY - 2] == '*') {
-                // nic
-            }
-            else if (wsp == (rozmiar - 1) && wspY == rozmiar && pl[wsp - 1][wspY - 1] == '*' && pl[wsp][wspY - 2] == '*') {
-                // nic
-            }
-            else if (pl[wsp][wspY - 1] != 'o') {
-                pl[wsp][wspY - 1] = '*';
-            }
-        }
-        else if (gracz % 2 != 0) {
-            if (wsp == 0 && wspY == 1 && pl[wsp + 1][wspY - 1] == 'o' && pl[wsp][wspY] == 'o') {
-                // nic
-            }
-            else if (wsp == (rozmiar - 1) && wspY == 1 && pl[wsp - 1][wspY - 1] == 'o' && pl[wsp][wspY] == 'o') {
-                // nic
-            }
-            else if (wsp == 0 && wspY == rozmiar && pl[wsp + 1][wspY - 1] == 'o' && pl[wsp][wspY - 2] == 'o') {
-                // nic
-            }
-            else if (wsp == (rozmiar - 1) && wspY == rozmiar && pl[wsp - 1][wspY - 1] == 'o' && pl[wsp][wspY - 2] == 'o') {
-                // nic
-            }
-            else if (pl[wsp][wspY - 1] != '*') {
-                pl[wsp][wspY - 1] = 'o';
-            }
-        }
+        put_i_checker(player, wsp, wspY, map, size);
     }
-    for (int j = PLANSZA_Y, k = 0; j < (PLANSZA_Y + rozmiar); j++, k++) {
 
-        gotoxy(PLANSZA_X, j + 1);
+    for (int j = MAP_Y, k = 0; j < (MAP_Y + size); j++, k++) {
 
-        for (int i = 0; i < rozmiar; i++) {
+        gotoxy(MAP_X, j + 1);
+
+        for (int i = 0; i < size; i++) {
 
             // jezeli aktualnie jestesmy graczem Bialym...
-
-            if (pl[i][k] == 'o') {
-
-                // sprawdzenie czy gracz Bialy znajduje sie w rogu planszy i jest otoczony prze gracza Czarnego
-
-                // lewy gorny rog..
-                if (i == 0 && k == 0 && pl[i + 1][k] == '*' && pl[i][k + 1] == '*') {
-                    pl[i][k] = '+';
-                    textcolor(1);
-                    putch(pl[i][k]);
-                    if (i != rozmiar - 1) {
-                        putch(' ');
-                    }
-                    wynikCzarnego += 1;
-                    gotoxy(LEGENDA_X, LEGENDA_Y + 12);
-                    sprintf(wynC, "Gracz Czarny %d raz(y) zabil gracza Bialego", wynikCzarnego);
-                    cputs(wynC);
-                    gotoxy(PLANSZA_X, j + 4);
-                }
-                // prawy gorny rog..
-                if (i == (rozmiar - 1) && k == 0 && pl[i - 1][k] == '*' && pl[i][k + 1] == '*') {
-                    pl[i][k] = '+';
-                    textcolor(1);
-                    putch(pl[i][k]);
-                    if (i != rozmiar - 1) {
-                        putch(' ');
-                    }
-                    wynikCzarnego += 1;
-                    gotoxy(LEGENDA_X, LEGENDA_Y + 12);
-                    sprintf(wynC, "Gracz Czarny %d raz(y) zabil gracza Bialego", wynikCzarnego);
-                    cputs(wynC);
-                    gotoxy(PLANSZA_X, j + 4);
-                }
-                // lewy dolny rog..
-                if (i == 0 && k == (rozmiar - 1) && pl[i + 1][k] == '*' && pl[i][k - 1] == '*') {
-                    pl[i][k] = '+';
-                    textcolor(1);
-                    putch(pl[i][k]);
-                    if (i != rozmiar - 1) {
-                        putch(' ');
-                    }
-                    wynikCzarnego += 1;
-                    gotoxy(LEGENDA_X, LEGENDA_Y + 12);
-                    sprintf(wynC, "Gracz Czarny %d raz(y) zabil gracza Bialego", wynikCzarnego);
-                    cputs(wynC);
-                    gotoxy(PLANSZA_X, j - 1);
-                }
-                // prawy dolny rog..
-                if (i == (rozmiar - 1) && k == (rozmiar - 1) && pl[i - 1][k] == '*' && pl[i][k - 1] == '*') {
-                    pl[i][k] = '+';
-                    textcolor(1);
-                    putch(pl[i][k]);
-                    if (i != rozmiar - 1) {
-                        putch(' ');
-                    }
-                    wynikCzarnego += 1;
-                    gotoxy(LEGENDA_X, LEGENDA_Y + 12);
-                    sprintf(wynC, "Gracz Czarny %d raz(y) zabil gracza Bialego", wynikCzarnego);
-                    cputs(wynC);
-                    gotoxy(PLANSZA_X, j - 1);
-                }
-
-                // sprawdzenie czy gracz Bialy jest w otoczeniu gracza Czarnego ze wszystkich stron
-
-                if (pl[i][k - 1] == '*' && pl[i][k + 1] == '*' && pl[i - 1][k] == '*' && pl[i + 1][k] == '*') {
-                    pl[i][k] = '.';
-                    textcolor(1);
-                    putch(pl[i][k]);
-                    if (i != rozmiar - 1) {
-                        putch(' ');
-                    }
-                    wynikCzarnego += 1;
-                    gotoxy(LEGENDA_X, LEGENDA_Y + 12);
-                    sprintf(wynC, "Gracz Czarny %d raz(y) zabil gracza Bialego", wynikCzarnego);
-                    cputs(wynC);
-                    gotoxy(PLANSZA_X, j);
-                }
-                else {
-                    textcolor(15);
-                    putch(pl[i][k]);
-                    if (i != rozmiar - 1) {
-                        putch(' ');
-                    }
-                    textcolor(1);
-                }
+            if (map[i][k] == 'o') {
+                white_move(i, j, k, map, size, black_players_count, message_white_player);
             }
-
             // jezeli aktualnie jestesmy graczem Czarnym...
-
-            else if (pl[i][k] == '*') {
-
-                // sprawdzenie czy gracz Bialy znajduje sie w rogu planszy i jest otoczony prze gracza Czarnego
-
-                // lewy gorny rog..
-                if (i == 0 && k == 0 && pl[i + 1][k] == 'o' && pl[i][k + 1] == 'o') {
-                    pl[i][k] = '+';
-                    textcolor(1);
-                    putch(pl[i][k]);
-                    if (i != rozmiar - 1) {
-                        putch(' ');
-                    }
-                    wynikBialego += 1;
-                    gotoxy(LEGENDA_X, LEGENDA_Y + 13);
-                    sprintf(wynB, "Gracz Bialy %d raz(y) zabil gracza Czarnego", wynikBialego);
-                    cputs(wynB);
-                    gotoxy(PLANSZA_X, j + 4);
-                }
-                // prawy gorny rog..
-                if (i == (rozmiar - 1) && k == 0 && pl[i - 1][k] == 'o' && pl[i][k + 1] == 'o') {
-                    pl[i][k] = '+';
-                    textcolor(1);
-                    putch(pl[i][k]);
-                    if (i != rozmiar - 1) {
-                        putch(' ');
-                    }
-                    wynikBialego += 1;
-                    gotoxy(LEGENDA_X, LEGENDA_Y + 13);
-                    sprintf(wynB, "Gracz Bialy %d raz(y) zabil gracza Czarnego", wynikBialego);
-                    cputs(wynB);
-                    gotoxy(PLANSZA_X, j + 4);
-                }
-                // lewy dolny rog..
-                if (i == 0 && k == (rozmiar - 1) && pl[i + 1][k] == 'o' && pl[i][k - 1] == 'o') {
-                    pl[i][k] = '+';
-                    textcolor(1);
-                    putch(pl[i][k]);
-                    if (i != rozmiar - 1) {
-                        putch(' ');
-                    }
-                    wynikBialego += 1;
-                    gotoxy(LEGENDA_X, LEGENDA_Y + 13);
-                    sprintf(wynB, "Gracz Bialy %d raz(y) zabil gracza Czarnego", wynikBialego);
-                    cputs(wynB);
-                    gotoxy(PLANSZA_X, j - 1);
-                }
-                // prawy dolny rog..
-                if (i == (rozmiar - 1) && k == (rozmiar - 1) && pl[i - 1][k] == 'o' && pl[i][k - 1] == 'o') {
-                    pl[i][k] = '+';
-                    textcolor(1);
-                    putch(pl[i][k]);
-                    if (i != rozmiar - 1) {
-                        putch(' ');
-                    }
-                    wynikBialego += 1;
-                    gotoxy(LEGENDA_X, LEGENDA_Y + 13);
-                    sprintf(wynB, "Gracz Bialy %d raz(y) zabil gracza Czarnego", wynikBialego);
-                    cputs(wynB);
-                    gotoxy(PLANSZA_X, j - 1);
-                }
-
-                // sprawdzenie czy gracz Czarny jest w otoczeniu gracza Bialego ze wszystkich stron
-
-                if (pl[i][k - 1] == 'o' && pl[i][k + 1] == 'o' && pl[i - 1][k] == 'o' && pl[i + 1][k] == 'o') {
-                    pl[i][k] = '.';
-                    textcolor(1);
-                    putch(pl[i][k]);
-                    if (i != rozmiar - 1) {
-                        putch(' ');
-                    }
-                    wynikBialego += 1;
-                    gotoxy(LEGENDA_X, LEGENDA_Y + 13);
-                    sprintf(wynB, "Gracz Bialy %d raz(y) zabil gracza Czarnego", wynikBialego);
-                    cputs(wynB);
-                    gotoxy(PLANSZA_X, j);
-
-                }
-                else {
-                    textcolor(0);
-                    putch(pl[i][k]);
-                    if (i != rozmiar - 1) {
-                        putch(' ');
-                    }
-                    textcolor(1);
-                }
+            else if (map[i][k] == '*') {
+                black_move(i, j, k, map, size, white_players_count, message_black_player);
             }
             else {
-                putch(pl[i][k]);
-                if (i != rozmiar - 1) {
+                putch(map[i][k]);
+                if (i != size - 1) {
                     putch(' ');
                 }
             }
@@ -275,64 +224,163 @@ void planszaIni(int x, int y, int attr, bool putI = false) {
     }
 }
 
-void malujLegende() {
+void draw_side_menu() {
 
-    gotoxy(LEGENDA_X, LEGENDA_Y);
-    cputs("strzalki: poruszanie kursorem na planszy");
+    gotoxy(MENU_X, MENU_Y);
+    cputs("arrows: move around");
 
-    gotoxy(LEGENDA_X, LEGENDA_Y + 1);
-    cputs("q: zakonczenie gry i wlaczenie menu");
+    gotoxy(MENU_X, MENU_Y + 1);
+    cputs("q: quit game");
 
-    gotoxy(LEGENDA_X, LEGENDA_Y + 2);
-    cputs("n: rozpoczecie nowej gry");
+    gotoxy(MENU_X, MENU_Y + 2);
+    cputs("n: new game");
 
-    gotoxy(LEGENDA_X, LEGENDA_Y + 3);
-    cputs("enter: potwierdzenie wyboru i zakonczenie tury gracza");
+    gotoxy(MENU_X, MENU_Y + 3);
+    cputs("i: place a stone");
 
-    gotoxy(LEGENDA_X, LEGENDA_Y + 4);
-    cputs("esc: anulowanie obecnej akcji");
-
-    gotoxy(LEGENDA_X, LEGENDA_Y + 5);
-    cputs("i: polozenie kamienia na planszy");
-
-    gotoxy(LEGENDA_X, LEGENDA_Y + 6);
-    cputs("s: zapis stanu gry");
-
-    gotoxy(LEGENDA_X, LEGENDA_Y + 7);
-    cputs("l: wczytanie stanu gry");
-
-    gotoxy(LEGENDA_X, LEGENDA_Y + 8);
-    cputs("f: zakonczenie gry");
-
-    gotoxy(LEGENDA_X, LEGENDA_Y + 15);
-    cputs("Projekt stworzony przez Taras'a Shuliakevych'a, 196615");
+    gotoxy(MENU_X, MENU_Y + 15);
+    cputs("Copyright Taras Shuliakevych");
 
 }
 
-void pokazWspolrzedne(int zero, int wsp, int wspY, char txt[32]) {
+void show_coords(int zero, int wsp, int wspY, char txt[32]) {
 
-    if (zero) sprintf(txt, "wspolrzedne: %d %d   ", wsp + 1, wspY);
-    else sprintf(txt, "wspolrzedne: %d %d   ", wsp + 1, wspY);
-    gotoxy(LEGENDA_X, LEGENDA_Y + 10);
+    if (zero) sprintf(txt, "coords: %d %d   ", wsp + 1, wspY);
+    else sprintf(txt, "coords: %d %d   ", wsp + 1, wspY);
+    gotoxy(MENU_X, MENU_Y + 10);
     cputs(txt);
 
 }
 
-
-// deklaracja funkcji main po to aby dzialal klawisz 'n'
 int main();
 
+void new_game(int& player, int& white_players_count, int& black_players_count) {
 
-void nowaGra() {
-
-    gracz = 1;
-    wynikBialego = 0;
-    wynikCzarnego = 0;
+    player = 1;
+    white_players_count = 0;
+    black_players_count = 0;
     main();
 
 }
 
-void program(int x, int y, int zn, int attr, int back, int zero, char txt[32]) {
+void black_player_logic(char** map, int& wsp, int& wspY, int& player, int& size, int x, int y, int attr, int& black_players_count, int& white_players_count, int* convert_x, int* convert_y, string message_white_player, string message_black_player) {
+
+    if (map[wsp][wspY - 1] == 'o' || map[wsp][wspY - 1] == '*') {
+        player -= 1;
+        //nic sie nie dzieje bo w tym miejscu jest juz kamien
+    }
+
+    // lewy gorny rog..
+    if (wsp == 0 && wspY == 1 && map[wsp + 1][wspY - 1] == 'o' && map[wsp][wspY] == 'o') {
+        player -= 1;
+    }
+
+    // prawy gorny rog..
+    if (wsp == size - 1 && wspY == 1 && map[wsp - 1][wspY - 1] == 'o' && map[wsp][wspY] == 'o') {
+        player -= 1;
+    }
+
+    // lewy dolny rog..
+    if (wsp == 0 && wspY == size && map[wsp + 1][wspY - 1] == 'o' && map[wsp][wspY - 2] == 'o') {
+        player -= 1;
+    }
+
+    // prawy dolny rog..
+    if (wsp == size - 1 && wspY == size && map[wsp - 1][wspY - 1] == 'o' && map[wsp][wspY - 2] == 'o') {
+        player -= 1;
+    }
+
+    if (map[wsp][wspY - 2] == 'o') {
+        if (map[wsp][wspY] == 'o') {
+            if (map[wsp - 1][wspY - 1] == 'o') {
+                if (map[wsp + 1][wspY - 1] == 'o') {
+                    player -= 1;
+                }
+                else {
+                    initialize_board(x, y, attr, player, map, size, black_players_count, white_players_count, convert_x, convert_y, message_white_player, message_black_player,true);
+                }
+            }
+            else {
+                initialize_board(x, y, attr, player, map, size, black_players_count, white_players_count, convert_x, convert_y, message_white_player, message_black_player, true);
+            }
+        }
+        else {
+            initialize_board(x, y, attr, player, map, size, black_players_count, white_players_count, convert_x, convert_y, message_white_player, message_black_player, true);
+        }
+    }
+    else {
+        initialize_board(x, y, attr, player, map, size, black_players_count, white_players_count, convert_x, convert_y, message_white_player, message_black_player, true);
+    }
+
+}
+
+void white_player_logic(char** map, int& wsp, int& wspY, int& player, int& size, int x, int y, int attr, int& black_players_count, int& white_players_count, int* convert_x, int* convert_y, string message_white_player, string message_black_player) {
+
+    if (map[wsp][wspY - 1] == '*' || map[wsp][wspY - 1] == 'o') {
+        player -= 1;
+        //nic sie nie dzieje bo w tym miejscu jest juz kamien
+    }
+
+    // lewy gorny rog..
+    if (wsp == 0 && wspY == 1 && map[wsp + 1][wspY - 1] == '*' && map[wsp][wspY] == '*') {
+        player -= 1;
+    }
+
+    // prawy gorny rog..
+    if (wsp == size - 1 && wspY == 1 && map[wsp - 1][wspY - 1] == '*' && map[wsp][wspY] == '*') {
+        player -= 1;
+    }
+
+    // lewy dolny rog..
+    if (wsp == 0 && wspY == size && map[wsp + 1][wspY - 1] == '*' && map[wsp][wspY - 2] == '*') {
+        player -= 1;
+    }
+
+    // prawy dolny rog..
+    if (wsp == size - 1 && wspY == size && map[wsp - 1][wspY - 1] == '*' && map[wsp][wspY - 2] == '*') {
+        player -= 1;
+    }
+
+    // sprawdzenie czy gracz Czarny jest otoczony przez gracza Bialego
+    if (map[wsp][wspY - 2] == '*') {
+        if (map[wsp][wspY] == '*') {
+            if (map[wsp - 1][wspY - 1] == '*') {
+                if (map[wsp + 1][wspY - 1] == '*') {
+                    player -= 1;
+                }
+                else {
+                    initialize_board(x, y, attr, player, map, size, black_players_count, white_players_count, convert_x, convert_y, message_white_player, message_black_player, true);
+                }
+            }
+            else {
+                initialize_board(x, y, attr, player, map, size, black_players_count, white_players_count, convert_x, convert_y, message_white_player, message_black_player, true);
+            }
+        }
+        else {
+            initialize_board(x, y, attr, player, map, size, black_players_count, white_players_count, convert_x, convert_y, message_white_player, message_black_player, true);
+        }
+    }
+    else {
+        initialize_board(x, y, attr, player, map, size, black_players_count, white_players_count, convert_x, convert_y, message_white_player, message_black_player, true);
+    }
+
+}
+
+void place_stone(char** map, int& player, int& wsp, int& wspY, int& size, int x, int y, int attr, int& black_players_count, int& white_players_count, int* convert_x, int* convert_y, string message_white_player, string message_black_player) {
+
+    player += 1;
+
+    // jezeli gracz jest czarny..
+    if (player % 2 == 0) {
+        black_player_logic(map, wsp, wspY, player, size, x, y, attr, black_players_count, white_players_count, convert_x, convert_y, message_white_player, message_black_player);
+    }
+    // jezeli gracz jest bialy
+    else if (player % 2 != 0) {
+        white_player_logic(map, wsp, wspY, player, size, x, y, attr, black_players_count, white_players_count, convert_x, convert_y, message_white_player, message_black_player);
+    }
+}
+
+void program(int x, int y, int zn, int attr, int back, int zero, char txt[32], int& size, int& player, int& white_players_count, int& black_players_count, int& left_border, int& right_border, int& top_border, int& bottom_border, char** map, int* convert_x, int* convert_y, string message_white_player, string message_black_player) {
 
     _setcursortype(_NOCURSOR);
     do {
@@ -340,144 +388,40 @@ void program(int x, int y, int zn, int attr, int back, int zero, char txt[32]) {
         textbackground(3);
         textcolor(1);
 
-        malujLegende();
+        draw_side_menu();
 
-        for (int i = PLANSZA_Y, j = 0; i < (PLANSZA_Y + rozmiar); i++, j++) {
-            konwertacjaY[i] = j;
+        for (int i = MAP_Y, j = 0; i < (MAP_Y + size); i++, j++) {
+            convert_y[i] = j;
         }
-        int wspY = konwertacjaY[y];
+        int wspY = convert_y[y];
 
-        for (int i = PLANSZA_X, j = 0; i <= (rozmiar * 2) - 2 + PLANSZA_X; i = i + 2, j++) {
-            konwertacjaX[i] = j;
+        for (int i = MAP_X, j = 0; i <= (size * 2) - 2 + MAP_X; i = i + 2, j++) {
+            convert_x[i] = j;
         }
-        int wsp = konwertacjaX[x];
+        int wsp = convert_x[x];
 
-        pokazWspolrzedne(zero, wsp, wspY, txt);
+        show_coords(zero, wsp, wspY, txt);
 
-        if (zn == 'n') nowaGra();
-
+        if (zn == 'n') {
+            new_game(player, white_players_count, black_players_count);
+        }
         if (zn == 'i') {
-
-            gracz += 1;
-
-            // jezeli gracz jest czarny..
-            if (gracz % 2 == 0) {
-                if (pl[wsp][wspY - 1] == 'o' || pl[wsp][wspY - 1] == '*') {
-                    gracz -= 1;
-                    //nic sie nie dzieje bo w tym miejscu jest juz kamien
-                }
-
-                // lewy gorny rog..
-                if (wsp == 0 && wspY == 1 && pl[wsp + 1][wspY - 1] == 'o' && pl[wsp][wspY] == 'o') {
-                    gracz -= 1;
-                }
-
-                // prawy gorny rog..
-                if (wsp == rozmiar - 1 && wspY == 1 && pl[wsp - 1][wspY - 1] == 'o' && pl[wsp][wspY] == 'o') {
-                    gracz -= 1;
-                }
-
-                // lewy dolny rog..
-                if (wsp == 0 && wspY == rozmiar && pl[wsp + 1][wspY - 1] == 'o' && pl[wsp][wspY - 2] == 'o') {
-                    gracz -= 1;
-                }
-
-                // prawy dolny rog..
-                if (wsp == rozmiar - 1 && wspY == rozmiar && pl[wsp - 1][wspY - 1] == 'o' && pl[wsp][wspY - 2] == 'o') {
-                    gracz -= 1;
-                }
-
-                if (pl[wsp][wspY - 2] == 'o') {
-                    if (pl[wsp][wspY] == 'o') {
-                        if (pl[wsp - 1][wspY - 1] == 'o') {
-                            if (pl[wsp + 1][wspY - 1] == 'o') {
-                                gracz -= 1;
-                            }
-                            else {
-                                planszaIni(x, y, attr, true);
-                            }
-                        }
-                        else {
-                            planszaIni(x, y, attr, true);
-                        }
-                    }
-                    else {
-                        planszaIni(x, y, attr, true);
-                    }
-                }
-                else {
-                    planszaIni(x, y, attr, true);
-                }
-
-            }
-
-            // jezeli gracz jest bialy
-            else if (gracz % 2 != 0) {
-                if (pl[wsp][wspY - 1] == '*' || pl[wsp][wspY - 1] == 'o') {
-                    gracz -= 1;
-                    //nic sie nie dzieje bo w tym miejscu jest juz kamien
-                }
-
-                // lewy gorny rog..
-                if (wsp == 0 && wspY == 1 && pl[wsp + 1][wspY - 1] == '*' && pl[wsp][wspY] == '*') {
-                    gracz -= 1;
-                }
-
-                // prawy gorny rog..
-                if (wsp == rozmiar - 1 && wspY == 1 && pl[wsp - 1][wspY - 1] == '*' && pl[wsp][wspY] == '*') {
-                    gracz -= 1;
-                }
-
-                // lewy dolny rog..
-                if (wsp == 0 && wspY == rozmiar && pl[wsp + 1][wspY - 1] == '*' && pl[wsp][wspY - 2] == '*') {
-                    gracz -= 1;
-                }
-
-                // prawy dolny rog..
-                if (wsp == rozmiar - 1 && wspY == rozmiar && pl[wsp - 1][wspY - 1] == '*' && pl[wsp][wspY - 2] == '*') {
-                    gracz -= 1;
-                }
-
-                // sprawdzenie czy gracz Czarny jest otoczony przez gracza Bialego
-                if (pl[wsp][wspY - 2] == '*') {
-                    if (pl[wsp][wspY] == '*') {
-                        if (pl[wsp - 1][wspY - 1] == '*') {
-                            if (pl[wsp + 1][wspY - 1] == '*') {
-                                gracz -= 1;
-                            }
-                            else {
-                                planszaIni(x, y, attr, true);
-                            }
-                        }
-                        else {
-                            planszaIni(x, y, attr, true);
-                        }
-                    }
-                    else {
-                        planszaIni(x, y, attr, true);
-                    }
-                }
-                else {
-                    planszaIni(x, y, attr, true);
-                }
-
-            }
-
+            place_stone(map, player, wsp, wspY, size, x, y, attr, black_players_count, white_players_count, convert_x, convert_y, message_white_player, message_black_player);
         }
 
-        planszaIni(x, y, attr);
+        initialize_board(x, y, attr, player, map, size, black_players_count, white_players_count, convert_x, convert_y, message_white_player, message_black_player);
 
         gotoxy(x, y);
         textcolor(attr);
         textbackground(back);
 
         // jezeli gracz jest czarny
-        if (gracz % 2 == 0) {
+        if (player % 2 == 0) {
             textbackground(15);
             putch(' ');
         }
         // jezeli gracz jest bialy
-        else if (gracz % 2 != 0) {
+        else if (player % 2 != 0) {
             textbackground(0);
             putch(' ');
         }
@@ -491,16 +435,16 @@ void program(int x, int y, int zn, int attr, int back, int zero, char txt[32]) {
 
             // przesuwanie kamieni
             if (zn == 0x48) {
-                if (y != granicaG) y = y - 1;
+                if (y != top_border) y = y - 1;
             }
             else if (zn == 0x50) {
-                if (y != granicaD) y = y + 1;
+                if (y != bottom_border) y = y + 1;
             }
             else if (zn == 0x4b) {
-                if (x != granicaL) x = x - 2;
+                if (x != left_border) x = x - 2;
             }
             else if (zn == 0x4d) {
-                if (x != granicaP) x = x + 2;
+                if (x != right_border) x = x + 2;
             }
         }
 
@@ -510,122 +454,113 @@ void program(int x, int y, int zn, int attr, int back, int zero, char txt[32]) {
 
 }
 
-// wczytuje co jest wpisane na klawiaturze i konwertuje to w liczby oraz przypisuje to do zmiennej 'rozmiar'
-void podajRozmiar(int zn) {
+void provide_size(int zn, string& input_size, int& size) {
 
     while (zn != 0x0D) {
 
         zn = getch();
 
+
         if (zn == 0x30) {
-            char zero[] = "0";
-            strcat(str, zero);
-            rozmiar = atoi(str);
+            int zero = 0;
+            input_size += to_string(zero);
+            size = stoi(input_size);
+
         }
         else if (zn == 0x31) {
-            char jeden[] = "1";
-            strcat(str, jeden);
-            rozmiar = atoi(str);
+            input_size += 1;
+            size = stoi(input_size);
         }
         else if (zn == 0x32) {
-            char dwa[] = "2";
-            strcat(str, dwa);
-            rozmiar = atoi(str);
+            input_size += 2;
+            size = stoi(input_size);
+
         }
         else if (zn == 0x33) {
-            char trzy[] = "3";
-            strcat(str, trzy);
-            rozmiar = atoi(str);
+            input_size += 3;
+            size = stoi(input_size);
+
         }
         else if (zn == 0x34) {
-            char cztery[] = "4";
-            strcat(str, cztery);
-            rozmiar = atoi(str);
+            input_size += 4;
+            size = stoi(input_size);
+
         }
         else if (zn == 0x35) {
-            char piec[] = "5";
-            strcat(str, piec);
-            rozmiar = atoi(str);
+            input_size += 5;
+            size = stoi(input_size);
+
         }
         else if (zn == 0x36) {
-            char szesc[] = "6";
-            strcat(str, szesc);
-            rozmiar = atoi(str);
+            input_size += 6;
+            size = stoi(input_size);
+
         }
         else if (zn == 0x37) {
-            char siedem[] = "7";
-            strcat(str, siedem);
-            rozmiar = atoi(str);
+            input_size += 7;
+            size = stoi(input_size);
         }
         else if (zn == 0x38) {
-            char osiem[] = "8";
-            strcat(str, osiem);
-            rozmiar = atoi(str);
+            input_size += 8;
+            size = stoi(input_size);
+
         }
         else if (zn == 0x39) {
-            char dziewiec[] = "9";
-            strcat(str, dziewiec);
-            rozmiar = atoi(str);
+            input_size += 9;
+            size = stoi(input_size);
+
         }
-        else {}
     }
 }
 
-// robi nowa/czysta plansze
-void stworzPlansze() {
+void create_board(char** map, int& size) {
 
-    for (int h = 0; h <= (rozmiar - 1); h++) {
-        for (int j = 1; j < (rozmiar - 1); j++) {
-            pl[0][j] = '+';
-            pl[h][0] = '+';
-            pl[h][j] = '.';
-            pl[rozmiar - 1][j] = '+';
-            pl[h][rozmiar - 1] = '+';
+    for (int h = 0; h <= (size - 1); h++) {
+        for (int j = 1; j < (size - 1); j++) {
+            map[0][j] = '+';
+            map[h][0] = '+';
+            map[h][j] = '.';
+            map[size - 1][j] = '+';
+            map[h][size - 1] = '+';
         }
     }
 
 }
 
-// ustawia granice planszy za ktore nie mozna wyjsc kursorem
-void przypiszOgraniczenia() {
+void apply_limitations(char** map, int& size, int& left_border, int& right_border, int& top_border, int& bottom_border) {
 
-    pl[rozmiar][rozmiar];
+    map[size][size];
 
-    granicaL = PLANSZA_X;
-    granicaG = PLANSZA_Y + 1;
-    granicaP = (rozmiar * 2) - 2 + PLANSZA_X;
-    granicaD = PLANSZA_Y + rozmiar;
+    left_border = MAP_X;
+    top_border = MAP_Y + 1;
+    right_border = (size * 2) - 2 + MAP_X;
+    bottom_border = MAP_Y + size;
 
 }
 
+void choose_size(int x, int y, int zn, int attr, int back, int zero, char txt[32], string& input_size, int& size, char** map, int& left_border, int& right_border, int& top_border, int& bottom_border, int& player, int& white_players_count, int& black_players_count, int* convert_x, int* convert_y, string message_white_player, string message_black_player);
 
-// deklaracja funkcji aby byla ona widoczna w funkcji sprawdzRozmiar()
-void wyborRozmiaru(int x, int y, int zn, int attr, int back, int zero, char txt[32]);
+void check_size(int x, int y, int zn, int attr, int back, int zero, char txt[32], string& input_size, int& size, char** map, int& left_border, int& right_border, int& top_border, int& bottom_border, int& player, int& white_players_count, int& black_players_count, int* convert_x, int* convert_y, string message_white_player, string message_black_player) {
 
+    int allowed_size_x = WINDOW_BORDER_X - MAP_X;
+    int allowed_size_y = WINDOW_BORDER_Y - MAP_Y;
 
-void sprawdzRozmiar(int x, int y, int zn, int attr, int back, int zero, char txt[32]) {
+    input_size = "";
 
-    int dopuszczonyRozmiar = GRANICA_OKNA - PLANSZA_X;
-    int dopuszczonyRozmiarY = GRANICA_OKNA_Y - PLANSZA_Y;
+    int actual_size = (size * 2) - 1;
 
-    for (int i = 0; i < 100; i++) {
-        str[i] = 0;
-    }
+    if (actual_size > allowed_size_x || size > allowed_size_y) {
+        size = 0;
 
-    if (((rozmiar * 2) - 1) > dopuszczonyRozmiar || rozmiar > dopuszczonyRozmiarY) {
-        rozmiar = 0;
+        input_size = "";
 
-        for (int i = 0; i < 100; i++) {
-            str[i] = 0;
-        }
-
-        wyborRozmiaru(x, y, zn, attr, back, zero, txt);
+        choose_size(x, y, zn, attr, back, zero, txt, input_size, size, map, left_border, right_border, top_border, bottom_border, player, white_players_count, black_players_count, convert_x, convert_y, message_white_player, message_black_player);
     }
     else {
-        przypiszOgraniczenia();
-        stworzPlansze();
+        apply_limitations(map, size, left_border, right_border, top_border, bottom_border);
+        create_board(map, size);
         clrscr();
-        program(x, y, zn, attr, back, zero, txt);
+        program(x, y, zn, attr, back, zero, txt, size, player, white_players_count, black_players_count, left_border, right_border, top_border, bottom_border, map, convert_x, convert_y, message_white_player, message_black_player);
         clrscr();
         textcolor(WHITE);
         textbackground(BLACK);
@@ -634,9 +569,9 @@ void sprawdzRozmiar(int x, int y, int zn, int attr, int back, int zero, char txt
 
 }
 
-void wyborRozmiaru(int x, int y, int zn, int attr, int back, int zero, char txt[32]) {
+void choose_size(int x, int y, int zn, int attr, int back, int zero, char txt[32], string& input_size, int& size, char** map, int& left_border, int& right_border, int& top_border, int& bottom_border, int& player, int& white_players_count, int& black_players_count, int* convert_x, int* convert_y, string message_white_player, string message_black_player) {
 
-    int opcja;
+    int option;
 
     while (true) {
 
@@ -645,7 +580,7 @@ void wyborRozmiaru(int x, int y, int zn, int attr, int back, int zero, char txt[
         _setcursortype(_NOCURSOR);
 
         gotoxy(6, 12);
-        cputs("Wybierz rozmiar planszy (nacisnij na odpowiednia literke na klawiaturze)");
+        cputs("Choose the board size (press the corresponding key on you keyboard)");
 
         gotoxy(6, 14);
         cputs("a) 9x9");
@@ -657,53 +592,52 @@ void wyborRozmiaru(int x, int y, int zn, int attr, int back, int zero, char txt[
         cputs("c) 19x19");
 
         gotoxy(6, 20);
-        cputs("d) wprowadz wlasny rozmiar");
+        cputs("d) custom size");
 
         textcolor(RED);
         gotoxy(6, 22);
-        cputs("q) WYJDZ Z GRY");
+        cputs("q) QUIT GAME");
         textcolor(WHITE);
 
-        opcja = getch();
+        option = getch();
 
-        if (opcja == 'a') {
+        if (option == 'a') {
 
-            rozmiar = 9;
+            size = 9;
 
-            sprawdzRozmiar(x, y, zn, attr, back, zero, txt);
-
-        }
-        else if (opcja == 'b') {
-
-            rozmiar = 13;
-
-            sprawdzRozmiar(x, y, zn, attr, back, zero, txt);
+            check_size(x, y, zn, attr, back, zero, txt, input_size, size, map, left_border, right_border, top_border, bottom_border, player, white_players_count, black_players_count, convert_x, convert_y, message_white_player, message_black_player);
 
         }
-        else if (opcja == 'c') {
+        else if (option == 'b') {
 
-            rozmiar = 19;
+            size = 13;
 
-            sprawdzRozmiar(x, y, zn, attr, back, zero, txt);
+            check_size(x, y, zn, attr, back, zero, txt, input_size, size, map, left_border, right_border, top_border, bottom_border, player, white_players_count, black_players_count, convert_x, convert_y, message_white_player, message_black_player);
 
         }
-        else if (opcja == 'd') {
+        else if (option == 'c') {
+
+            size = 19;
+
+            check_size(x, y, zn, attr, back, zero, txt, input_size, size, map, left_border, right_border, top_border, bottom_border, player, white_players_count, black_players_count, convert_x, convert_y, message_white_player, message_black_player);
+
+        }
+        else if (option == 'd') {
 
             clrscr();
 
             gotoxy(6, 10);
             cputs("Wprowadz wlasny rozmiar..");
 
-            podajRozmiar(zn);
+            provide_size(zn, input_size, size);
 
-            sprawdzRozmiar(x, y, zn, attr, back, zero, txt);
+            check_size(x, y, zn, attr, back, zero, txt, input_size, size, map, left_border, right_border, top_border, bottom_border, player, white_players_count, black_players_count, convert_x, convert_y, message_white_player, message_black_player);
 
         }
-        else if (opcja == 'q') {
+        else if (option == 'q') {
             clrscr();
             exit(0);
         }
-        else {}
     }
 
 }
@@ -715,10 +649,36 @@ int main() {
 
     settitle("Go by Taras Shuliakevych, 196615");
 
-    int zn = 0, x = PLANSZA_X, y = PLANSZA_Y + 1, attr = 0, back = 3, zero = 0;
-    char txt[32];
+    int left_border = 0;
+    int top_border = 0;
+    int bottom_border = 0;
+    int right_border = 0;
 
-    wyborRozmiaru(x, y, zn, attr, back, zero, txt);
+    int player = 1;
+    int white_players_count = 0;
+    int black_players_count = 0;
+
+    string message_black_player;
+    string message_white_player;
+
+    const int max_storage_convert = 100;
+
+    int convert_y[max_storage_convert];
+    int convert_x[max_storage_convert];
+
+    int zn = 0, x = MAP_X, y = MAP_Y + 1, attr = 0, back = 3, zero = 0;
+    int size = 0;
+    string input_size;
+    char txt[32];
+  
+    const int max_storage_map = 200;
+
+    char** map = new char* [max_storage_map];
+    for (int i = 0; i < max_storage_map; i++) {
+        map[i] = new char[max_storage_map];
+    }
+
+    choose_size(x, y, zn, attr, back, zero, txt, input_size, size, map, left_border, right_border, top_border, bottom_border, player, white_players_count, black_players_count, convert_x, convert_y, message_white_player, message_black_player);
 
     return 0;
 }
